@@ -8,8 +8,11 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public class SuperMegaSolver {
-
+    private static Thread drawThread = null;
     public static String solveAllProblems(Diffurchik diffurchik, double y0, double x0, double xn, double h, double eps) {
+        if (drawThread != null)
+            drawThread.stop();
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("Initial params and true value of diffurchik\n");
@@ -66,21 +69,28 @@ public class SuperMegaSolver {
             ymin -=5;
             ymax +=5;
         }
-        DrawerFunctions drawer = new DrawerFunctions(xmin, xmax, ymin, ymax);
-        drawer.drawFunction(new Equation() {
-            @Override
-            public Function<Double, Double> equation() {
-                return (Double x) -> diffurchik.trueSolution(x0, y0).apply(x);
-            }
+        Double finalXmin = xmin;
+        Double finalXmax = xmax;
+        Double finalYmin = ymin;
+        Double finalYmax = ymax;
+        drawThread = new Thread(() -> {
+            DrawerFunctions drawer = new DrawerFunctions(finalXmin, finalXmax, finalYmin, finalYmax);
+            drawer.drawFunction(new Equation() {
+                @Override
+                public Function<Double, Double> equation() {
+                    return (Double x) -> diffurchik.trueSolution(x0, y0).apply(x);
+                }
 
-            @Override
-            public String equationToString() {
-                return diffurchik.trueSolutionToString();
+                @Override
+                public String equationToString() {
+                    return diffurchik.trueSolutionToString();
+                }
+            });
+            for (var sol : solutionList) {
+                drawer.drawFunction(sol);
             }
         });
-        for (var sol : solutionList) {
-            drawer.drawFunction(sol);
-        }
+        drawThread.start();
         return sb.toString();
     }
 }

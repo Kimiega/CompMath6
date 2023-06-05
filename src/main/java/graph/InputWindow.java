@@ -111,6 +111,7 @@ public class InputWindow extends JFrame implements ActionListener, FocusListener
         // set the size of frame
         frame.setSize(350, 600);
         frame.setAlwaysOnTop(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
@@ -196,7 +197,8 @@ public class InputWindow extends JFrame implements ActionListener, FocusListener
 
     @Override
     public void focusGained(FocusEvent e) {
-        e.getOppositeComponent().setBackground(Color.WHITE);
+        if (e!= null && e.getComponent() != null)
+            e.getComponent().setBackground(Color.WHITE);
     }
 
     @Override

@@ -36,24 +36,25 @@ public class MilneMethod implements DiffurSolver {
     }
 
     private Dot[] darkSolve(Diffurchik diffurchik, Dot[] sol, double h, double eps, int i) {
-        if (i >= sol.length)
-            return sol;
-        double x = sol[i-1].x() + h;
-        double yPredict = sol[i-4].y() + 4 * h / 3 *
-                (2 * diffurchik.equation().apply(sol[i-3].x(), sol[i-3].y())
-                - diffurchik.equation().apply(sol[i-2].x(), sol[i-2].y())
-                + 2 * diffurchik.equation().apply(sol[i-1].x(), sol[i-1].y()));
-        double prev = yPredict;
-        double yCorr;
-        do {
-            yPredict = prev;
-            yCorr = sol[i-2].y() + h /3 *
-                    (diffurchik.equation().apply(sol[i-2].x(), sol[i-2].y())
-                    + 4 * diffurchik.equation().apply(sol[i-1].x(), sol[i-1].y())
-                    + diffurchik.equation().apply(x, yPredict));
-            prev = yCorr;
-        } while(Math.abs(yCorr - yPredict) > eps);
-        sol[i] = new Dot(x, yCorr);
-        return darkSolve(diffurchik, sol, h, eps, i + 1);
+        while (i < sol.length) {
+            double x = sol[i - 1].x() + h;
+            double yPredict = sol[i - 4].y() + 4 * h / 3 *
+                    (2 * diffurchik.equation().apply(sol[i - 3].x(), sol[i - 3].y())
+                            - diffurchik.equation().apply(sol[i - 2].x(), sol[i - 2].y())
+                            + 2 * diffurchik.equation().apply(sol[i - 1].x(), sol[i - 1].y()));
+            double prev = yPredict;
+            double yCorr;
+            do {
+                yPredict = prev;
+                yCorr = sol[i - 2].y() + h / 3 *
+                        (diffurchik.equation().apply(sol[i - 2].x(), sol[i - 2].y())
+                                + 4 * diffurchik.equation().apply(sol[i - 1].x(), sol[i - 1].y())
+                                + diffurchik.equation().apply(x, yPredict));
+                prev = yCorr;
+            } while (Math.abs(yCorr - yPredict) > eps);
+            sol[i] = new Dot(x, yCorr);
+            i++;
+        }
+        return sol;
     }
 }
