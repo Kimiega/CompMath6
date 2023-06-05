@@ -30,7 +30,6 @@ public class DrawerFunctions {
         this(-10d, 10d, -10d, 10d);
     }
     public DrawerFunctions(double xMin, double xMax, double yMin, double yMax) {
-        //init(scale);
         this.xMin = xMin;
         this.xMax = xMax;
         this.yMin = yMin;
@@ -73,7 +72,6 @@ public class DrawerFunctions {
     }
 
     public void drawGrid() {
-
         StdDraw.line(xMin + offsetX, yMin + offsetY, xMax - offsetX,yMin + offsetY);
         StdDraw.line(xMin + offsetX, yMin + offsetY, xMin + offsetX,yMax - offsetY);
         for (double x = xMin + offsetX; x < xMax - offsetX; x += SCALEX) {

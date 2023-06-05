@@ -22,15 +22,16 @@ public class MilneMethod implements DiffurSolver {
             h = (xn - x0)/3;
         Dot[] sol;
        // do {
-
             double curEps = Double.POSITIVE_INFINITY;
-            Dot[] tempSol = oneStepMethod.solve(diffurchik, y0, x0, xn, h * 2, curEps).getTable();
-            sol = darkSolve(diffurchik, tempSol, h, eps, 4);
+            Solution oneStepMethodSol = oneStepMethod.solve(diffurchik, y0, x0, xn, h * 2, curEps);
+            Dot[] tempDots = oneStepMethodSol.getTable();
+            h = oneStepMethodSol.getH();
+            sol = darkSolve(diffurchik, tempDots, h, eps, 4);
             h /= 2;
 //        } while (Arrays.stream(sol).map((Dot dot) ->
 //                Math.abs(diffurchik.trueSolution(x0, y0).apply(dot.x()) - dot.y())).filter(Double::isFinite).max(Comparator.naturalOrder()).get() > eps);
         return new Solution(sol, Arrays.stream(sol).map((Dot dot) ->
-                Math.abs(diffurchik.trueSolution(x0, y0).apply(dot.x()) - dot.y())).filter(Double::isFinite).max(Comparator.naturalOrder()).get(), methodName());
+                Math.abs(diffurchik.trueSolution(x0, y0).apply(dot.x()) - dot.y())).filter(Double::isFinite).max(Comparator.naturalOrder()).get(), h, methodName());
 
     }
 
@@ -52,7 +53,7 @@ public class MilneMethod implements DiffurSolver {
                     + diffurchik.equation().apply(x, yPredict));
             prev = yCorr;
         } while(Math.abs(yCorr - yPredict) > eps);
-        sol[i] = new Dot(x, yPredict);
+        sol[i] = new Dot(x, yCorr);
         return darkSolve(diffurchik, sol, h, eps, i + 1);
     }
 }

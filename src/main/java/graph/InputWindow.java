@@ -1,5 +1,7 @@
 package graph;
 
+import linal.Diffurchik;
+import linal.Diffurchiki;
 import linal.SuperMegaSolver;
 
 import javax.swing.*;
@@ -15,91 +17,100 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.Vector;
 
-public class InputWindow extends JFrame implements ActionListener, ChangeListener, FocusListener {
-    private static final int minAmountDots = 8;
-    private static final int maxAmountDots = 12;
-    static JTextField[] textX;
-    static JTextField[] textY;
-    static JTextField textField;
+public class InputWindow extends JFrame implements ActionListener, FocusListener {
+
+    static JLabel diffChoiceBoxLabel;
+    static JComboBox<Diffurchik> diffChoiceBox;
+
+    static JLabel y0Label;
+    static JLabel x0Label;
+    static JLabel xnLabel;
+    static JTextField y0Field;
+    static JTextField x0Field;
+    static JTextField xnField;
+
+    static JLabel hLabel;
+    static JLabel epsLabel;
+    static JTextField hField;
+    static JTextField epsField;
 
     static JFrame frame;
-
+    static JPanel mainGrid;
     static JButton submit;
 
-    static JButton fromFile;
-
-    static JButton drawPerfect;
-
-    static JSlider slider;
-
-    // default constructor
+    static Thread solver = null;
     InputWindow() {}
 
     public static void init()
     {
+        //start
         InputWindow inputWindow = new InputWindow();
+        frame = new JFrame("Diffurchik solver");
 
-        frame = new JFrame("Input dots");
+        //grid
+        JPanel methodGrid = new JPanel(new GridLayout(2, 1));
+        JPanel initialGrid = new JPanel(new GridLayout(2, 3));
+        JPanel additionalGrid = new JPanel(new GridLayout(2, 2));
+        JPanel buttonGrid = new JPanel(new GridLayout(1, 1));
+        mainGrid = new JPanel(new GridLayout(4,1));
+        mainGrid.add(methodGrid);
+        mainGrid.add(initialGrid);
+        mainGrid.add(additionalGrid);
+        mainGrid.add(buttonGrid);
+
+        //methodChoice
+        diffChoiceBoxLabel = new JLabel("Choose the method", SwingConstants.CENTER);
+        diffChoiceBox = new JComboBox<>(Diffurchiki.diffurchikiList.toArray(new Diffurchik[0]));
+        methodGrid.add(diffChoiceBoxLabel);
+        methodGrid.add(diffChoiceBox);
+
+        //initial params
+        y0Label = new JLabel("y0", SwingConstants.CENTER);
+        x0Label = new JLabel("x0", SwingConstants.CENTER);
+        xnLabel = new JLabel("xn", SwingConstants.CENTER);
+        y0Field = new JTextField(8);
+        x0Field = new JTextField(8);
+        xnField = new JTextField(8);
+        initialGrid.add(y0Label);
+        initialGrid.add(x0Label);
+        initialGrid.add(xnLabel);
+        initialGrid.add(y0Field);
+        initialGrid.add(x0Field);
+        initialGrid.add(xnField);
+
+        //additional params
+        hLabel = new JLabel("h", SwingConstants.CENTER);
+        epsLabel = new JLabel("eps", SwingConstants.CENTER);
+        hField = new JTextField(12);
+        epsField = new JTextField(12);
+        additionalGrid.add(hLabel);
+        additionalGrid.add(epsLabel);
+        additionalGrid.add(hField);
+        additionalGrid.add(epsField);
+
+        //button
         submit = new JButton("submit");
-        fromFile = new JButton("fromFile");
-        drawPerfect = new JButton("drawPerfect");
+        buttonGrid.add(submit);
 
-        JPanel firstGrid = new JPanel(new GridLayout(2, 1));
-        JPanel gridDots = new JPanel(new GridLayout(maxAmountDots + 1, 3));
-        JPanel lastGrid = new JPanel(new GridLayout(1, 3));
-
-        //slider
-        slider = new JSlider(minAmountDots, maxAmountDots, maxAmountDots);
-        slider.setPaintTrack(true);
-        slider.setPaintTicks(true);
-        slider.setPaintLabels(true);
-        slider.setMajorTickSpacing(1);
-        slider.setMinorTickSpacing(1);
-
-        //input dots
-        textX = new JTextField[maxAmountDots];
-        textY = new JTextField[maxAmountDots];
-        for (int i = 0; i < maxAmountDots; ++i) {
-            textX[i] = new JTextField(8);
-            textX[i].addFocusListener(inputWindow);
-            textY[i] = new JTextField(8);
-            textY[i].addFocusListener(inputWindow);
-
-        }
-
-        slider.addChangeListener(inputWindow);
+        //Listeners
+        diffChoiceBox.addActionListener(inputWindow);
+        y0Field.addFocusListener(inputWindow);
+        x0Field.addFocusListener(inputWindow);
+        xnField.addFocusListener(inputWindow);
+        hField.addFocusListener(inputWindow);
+        epsField.addFocusListener(inputWindow);
         submit.addActionListener(inputWindow);
-        fromFile.addActionListener(inputWindow);
-        drawPerfect.addActionListener(inputWindow);
-
-        textField = new JTextField(16);
 
         JPanel p = new JPanel();
 
-        firstGrid.add(new JLabel("Amount of dots", SwingConstants.CENTER));
-        firstGrid.add(slider);
-
-        gridDots.add(new JLabel("", SwingConstants.CENTER));
-        gridDots.add(new JLabel("X", SwingConstants.CENTER));
-        gridDots.add(new JLabel("Y", SwingConstants.CENTER));
-        for (int i = 0; i < maxAmountDots; ++i) {
-            gridDots.add(new JLabel(Integer.toString(i+1), SwingConstants.CENTER));
-            gridDots.add(textX[i]);
-            gridDots.add(textY[i]);
-        }
-
-        lastGrid.add(submit);
-        lastGrid.add(fromFile);
-        lastGrid.add(drawPerfect);
         // add panel to frame
-        p.add(firstGrid);
-        p.add(gridDots);
-        p.add(lastGrid);
+        p.add(mainGrid);
         frame.add(p);
         // set the size of frame
         frame.setSize(350, 600);
-
+        frame.setAlwaysOnTop(true);
         frame.setVisible(true);
     }
 
@@ -109,101 +120,98 @@ public class InputWindow extends JFrame implements ActionListener, ChangeListene
         clearColors();
         String s = e.getActionCommand();
         if (s.equals(submit.getText())) {
-            Double[][] dots = new Double[slider.getValue()][2];
             boolean flag = true;
-            for (int i = 0; i < slider.getValue(); ++i) {
-                JTextField field = textX[i];
-                String x = field.getText();
-                double parsedX = 0d;
-                try {
-                    parsedX = Double.parseDouble(x.replace(",", "."));
-                } catch (Exception ex) {
-                    field.setBackground(Color.RED);
-                    flag = false;
-                }
-                if (flag)
-                    dots[i][0] = parsedX;
-                field = textY[i];
-                x = field.getText();
-                double parsedY = 0d;
-                try {
-                    parsedY = Double.parseDouble(x.replace(",", "."));
-                } catch (Exception ex) {
-                    field.setBackground(Color.RED);
-                    flag = false;
-                }
-                if (flag)
-                    dots[i][1] = parsedY;
-            }
-            if (flag) {
-//                String result = SuperMegaSolver.solveAllProblems(dots);
-//                OutputWindow.init(result);
-            }
-        }
-        if (s.equals(fromFile.getText())) {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-            int result = fileChooser.showOpenDialog(this);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                clearText();
-                InputStream inputStream = null;
-                try {
-                    inputStream = new FileInputStream(selectedFile);
-                    Scanner scanner = new Scanner(inputStream);
-                    int i = 0;
-                    while (scanner.hasNext() && i < maxAmountDots) {
-                        textX[i].setText(scanner.next());
-                        textY[i].setText(scanner.next());
-                        i++;
-                    }
-                    slider.setValue(i);
-                }
-                catch (Exception ignored) {}
-                finally {
-                    if (inputStream != null) {
-                        try {
-                            inputStream.close();
-                        } catch (IOException ignored) {}
-                    }
-                }
-            }
-        }
-    }
-    public void stateChanged(ChangeEvent e)
-    {
-        clearColors();
-        for (int i = 0; i < maxAmountDots; ++i) {
-            if (i < slider.getValue()) {
-                textX[i].setEnabled(true);
-                textY[i].setEnabled(true);
+            Diffurchik diffurchik = null;
+            if (!(diffChoiceBox.getSelectedItem() instanceof Diffurchik)) {
+                diffChoiceBox.setBackground(Color.RED);
+                flag = false;
             }
             else {
-
-                textX[i].setEnabled(false);
-                textY[i].setEnabled(false);
+                diffurchik = (Diffurchik) diffChoiceBox.getSelectedItem();
             }
+            Double y0 = checkTextFieldIsNumber(y0Field);
+            Double x0 = checkTextFieldIsNumber(x0Field);
+            Double xn = checkTextFieldIsNumber(xnField);
+            Double h = checkTextFieldIsNumber(hField);
+            Double eps = checkTextFieldIsNumber(epsField);
+
+            if (y0 == null) {
+                y0Field.setBackground(Color.RED);
+                flag = false;
+            }
+            if (x0 == null) {
+                x0Field.setBackground(Color.RED);
+                flag = false;
+            }
+            if (xn == null) {
+                xnField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (h == null) {
+                hField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (eps == null) {
+                epsField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (flag && x0 >= xn) {
+                x0Field.setBackground(Color.RED);
+                xnField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (flag && h <= 0) {
+                hField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (flag && eps <= 0) {
+                epsField.setBackground(Color.RED);
+                flag = false;
+            }
+            if (flag) {
+                if (solver != null)
+                    solver.stop();
+                OutputWindow.closeWindow();
+                Diffurchik finalDiffurchik = diffurchik;
+                solver = new Thread(() -> {
+                    String result = SuperMegaSolver.solveAllProblems(finalDiffurchik, y0, x0, xn, h, eps);
+                    OutputWindow.init(result);
+                }
+                );
+                solver.start();
+            }
+        }
+        if (s.equals(diffChoiceBox.toString())) {
+            diffChoiceBox.setBackground(Color.WHITE);
         }
     }
     private static void clearColors() {
-        for (int i = 0; i < maxAmountDots; ++i) {
-            textX[i].setBackground(Color.WHITE);
-            textY[i].setBackground(Color.WHITE);
-        }
-    }
-    private static void clearText() {
-        for (int i = 0; i < maxAmountDots; ++i) {
-            textX[i].setText("");
-            textY[i].setText("");
-        }
+        diffChoiceBox.setBackground(Color.WHITE);
+        y0Field.setBackground(Color.WHITE);
+        x0Field.setBackground(Color.WHITE);
+        xnField.setBackground(Color.WHITE);
+        hField.setBackground(Color.WHITE);
+        epsField.setBackground(Color.WHITE);
     }
 
     @Override
     public void focusGained(FocusEvent e) {
-        clearColors();
+        e.getOppositeComponent().setBackground(Color.WHITE);
     }
 
     @Override
     public void focusLost(FocusEvent e) {
+    }
+
+    private Double checkTextFieldIsNumber(JTextField field) {
+        String x = field.getText();
+        double parsed;
+        try {
+            parsed = Double.parseDouble(x.replace(",", "."));
+        } catch (Exception ex) {
+            field.setBackground(Color.RED);
+            return null;
+        }
+        return parsed;
     }
 }

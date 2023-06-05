@@ -1,6 +1,5 @@
 package linal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -76,7 +75,7 @@ public class Diffurchiki {
     };
 
     public static List<DiffurSolver> diffurSolvers = List.of(
-            new ImprovedEulerMethod(), new FourthOrderRungeKuttaMethod(), new MilneMethod()//, new ShulgaMethod()
+            new ImprovedEulerMethod(), new FourthOrderRungeKuttaMethod(), new MilneMethod()
     );
     public static List<Diffurchik> diffurchikiList = List.of(diffurchik1, diffurchik2, diffurchik3);
 }

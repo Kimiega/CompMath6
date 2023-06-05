@@ -10,7 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class OutputWindow extends JFrame implements ActionListener {
-    static JFrame frame;
+    static JFrame frame = null;
     static JLabel label;
     static JTextArea textArea;
     private static OutputWindow outputWindow;
@@ -56,7 +56,8 @@ public class OutputWindow extends JFrame implements ActionListener {
         if (filename.length() == 0) throw new IllegalArgumentException("argument to save() is the empty string");
         File file = new File(filename);
         String suffix = filename.substring(filename.lastIndexOf('.') + 1);
-        if (!filename.contains(".")) suffix = "";
+        if (!filename.contains("."))
+            suffix = "";
 
         try {
             FileWriter fw = new FileWriter(file);
@@ -69,5 +70,9 @@ public class OutputWindow extends JFrame implements ActionListener {
     }
     private static void validateNotNull(Object x, String name) {
         if (x == null) throw new IllegalArgumentException(name + " is null");
+    }
+    public static void closeWindow() {
+        if (frame != null)
+            frame.setVisible(false);
     }
 }
